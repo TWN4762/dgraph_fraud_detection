@@ -1,0 +1,67 @@
+# DGraph-Fin 数据集配置文件
+
+data:
+  source: "DGraph-Fin"
+  description: "金融用户社交网络，节点为借贷用户，边为紧急联系人关系"
+  
+  # 本地原始数据路径（npz 文件）
+  #local_npz_path: "/home/wushihang/data/dgraph/dgraphfin.npz"
+  # HDFS 上存储中间 Parquet 的路径
+  #hdfs_parquet_path: "/user/wushihang/dgraph/parquet"
+
+  # 原始 npz 文件在 HDFS 上的路径
+  hdfs_npz_path: "hdfs://localhost:9000/user/wushihang/dgraph/raw/dgraphfin.npz"
+
+  # 处理后 Parquet 存放路径（Hive 外部表位置）
+  hdfs_parquet_path: "/user/hive/warehouse/dgraph_db.db/parquet"
+  
+  # Hive 表名
+  table_nodes: "dgraph_nodes"
+  table_edges: "dgraph_edges"
+  table_results: "dgraph_results"
+  
+  # 采样配置
+  enable_sampling: true
+  sample_fraction: 0.1          # 采样比例，10% 的节点
+  sample_seed: 42
+
+
+# 列名映射（与 npz 文件中的键名一致）
+columns:
+  node_index: "node_id"           # 节点索引（0-based）
+  node_features: "x"              # 特征数组 (N, 17)
+  node_label: "y"                 # 标签: 1=欺诈, 0=正常, -1=背景节点
+  train_mask: "train_mask"        # 训练集节点索引（前景节点）
+  valid_mask: "valid_mask"        # 验证集节点索引
+  test_mask: "test_mask"          # 测试集节点索引
+  edge_src: "src"                 # 边源节点
+  edge_dst: "dst"                 # 边目标节点
+  edge_type: "edge_type"          # 边类型 (0-11)
+  edge_timestamp: "edge_timestamp"  # 加密时间戳
+
+# Spark 配置
+spark:
+  master: "local[4]"
+  driver_memory: "4g"
+  shuffle_partitions: 200
+  # 处理大图优化
+  spark.graphx.pregel.checkpointInterval: 10
+  spark.sql.adaptive.enabled: true
+  spark.sql.adaptive.coalescePartitions.enabled: true
+
+# 模型配置
+model:
+  num_trees: 50
+  max_depth: 10
+  min_samples_split: 5
+  min_samples_leaf: 2
+  max_bins: 32
+  test_ratio: 0.3
+  class_weight: "balanced"   # 处理不平衡
+
+# 可视化配置
+viz:
+  output_dir: "output/figures"
+  dpi: 150
+  figure_format: "png"
+  fig_size: [10, 6]
